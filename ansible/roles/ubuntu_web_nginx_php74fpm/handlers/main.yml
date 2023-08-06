@@ -1,0 +1,20 @@
+---
+# handlers file for ubuntu_web_nginx_php74fpm
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: Restart php
+  service:
+    name: '{{ item }}'
+    state: restarted
+  loop:
+    - phpsessionclean
+    - php7.4-fpm
+
+- name: Restart vsftpd
+  service:
+    name: vsftpd
+    state: restarted

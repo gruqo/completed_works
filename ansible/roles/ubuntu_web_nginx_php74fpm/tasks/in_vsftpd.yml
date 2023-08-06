@@ -1,0 +1,74 @@
+---
+- name: Add group for ftp
+  group:
+    name: '{{ ftp_user_login }}'
+    state: present
+    gid: 1050
+
+- name: Add user for ftp
+  ansible.builtin.user:
+    name: '{{ ftp_user_login }}'
+    password: "{{ftp_user_pass | password_hash('sha512')}}"
+    uid: 1050
+    group: '{{ ftp_user_login }}'
+    shell: /bin/bash
+    create_home: true
+    home: '{{ dir_site_ftp }}'
+
+- name: Backup vsftpd.conf
+  command: chown -R {{ ftp_user_login }}:{{ web_user }} {{ dir_site_ftp }}
+
+- name: Update all packages to their present version
+  ansible.builtin.apt:
+    name: "*"
+    state: present
+
+- name: Install apache2-utils and vsftpd
+  apt:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - apache2-utils
+    - python3-passlib
+    - vsftpd
+
+- name: Backup vsftpd.conf
+  command: mv /etc/vsftpd.conf /etc/vsftpd.conf.origin
+
+- name: Copy vsftpd.conf
+  template:
+    src: vsftpd.j2
+    dest: /etc/vsftpd.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart vsftpd
+
+- name: Add a user to a password file
+  community.general.htpasswd:
+    path: '{{ file_web_ftp_acc }}'
+    name: '{{ ftp_user_login }}'
+    password: '{{ ftp_user_pass }}'
+    owner: root
+    group: '{{ web_user }}'
+    mode: 0640
+
+- name: Add config for ftp
+  template:
+    src: conf_page_ftp.j2
+    dest: /etc/nginx/sites-available/ftp.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable page ftp
+  file:
+    src: /etc/nginx/sites-available/ftp.conf
+    dest: /etc/nginx/sites-enabled/ftp.conf
+    owner: root
+    group: root
+    state: link
+  notify:
+    - Restart nginx
+    - Restart php

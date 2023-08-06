@@ -1,0 +1,7 @@
+---
+# handlers file for ubuntu_sys_config
+
+- name: Restart sshd
+  service:
+    name: sshd
+    state: restarted

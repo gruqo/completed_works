@@ -1,0 +1,12 @@
+---
+# Open port for nginx in ufw
+
+- name: Open port in firewall
+  community.general.ufw:
+    rule: allow
+    name: '{{ item }}'
+    state: reloaded
+  loop:
+    - Nginx HTTP
+    - Nginx HTTPS
+    - ftp

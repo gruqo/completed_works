@@ -1,0 +1,78 @@
+#       $OpenBSD: sshd_config,v 1.101 2017/03/14 07:19:07 djm Exp $
+
+Port {{ ssh_port }}
+#AddressFamily any
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+
+#Ciphers and keying
+#RekeyLimit default none
+
+SyslogFacility AUTHPRIV
+LogLevel INFO
+
+LoginGraceTime 2m
+StrictModes yes
+MaxStartups 3:30:9
+MaxAuthTries 3
+MaxSessions 10
+
+PermitRootLogin No
+
+PasswordAuthentication no
+PermitEmptyPasswords no
+
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+
+#AuthorizedPrincipalsFile none
+#AuthorizedKeysCommand none
+#AuthorizedKeysCommandUser nobody
+
+ChallengeResponseAuthentication no
+
+#HostbasedAuthentication no
+
+IgnoreRhosts yes
+#IgnoreUserKnownHosts no
+
+#GSSAPIAuthentication yes
+#GSSAPICleanupCredentials no
+
+UsePAM yes
+
+#AllowAgentForwarding yes
+#AllowTcpForwarding yes
+#GatewayPorts no
+X11Forwarding no
+#X11DisplayOffset 10
+#X11UseLocalhost yes
+#PermitTTY yes
+PrintMotd no
+#PrintLastLog yes
+#TCPKeepAlive yes
+#UseLogin no
+#PermitUserEnvironment no
+#Compression delayed
+#ClientAliveInterval 0
+#ClientAliveCountMax 3
+#UseDNS no
+#PidFile /var/run/sshd.pid
+#MaxStartups 10:30:100
+#PermitTunnel no
+#ChrootDirectory none
+#VersionAddendum none
+
+#Banner none
+
+AcceptEnv LANG LC_*
+#AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+#AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+#AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
+#AcceptEnv XMODIFIERS
+
+Subsystem       sftp    /usr/lib/openssh/sftp-server
