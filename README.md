@@ -41,7 +41,7 @@
 
 |Имя|Описание|
 |:-|:-|
-| [ubuntu_sys_config](ansible/roles/ubuntu_sys_config/README.md) | - роль для конфигруции ВМ после создания. <br>ОС - Ubuntu |
-| [ubuntu_web_nginx_php74fpm](ansible/roles/ubuntu_web_nginx_php74fpm/README.md) | - роль для установки и настройки: nginx, php7.4-fpm, vsftpd. <br>ОС - Ubuntu |
+| [ubuntu_sys_config](ansible/roles/ubuntu_sys_config/README.md) | - роль для конфигруции ВМ после создания. <br>ОС: Ubuntu |
+| [ubuntu_web_nginx_php74fpm](ansible/roles/ubuntu_web_nginx_php74fpm/README.md) | - роль для установки и настройки: nginx, php7.4-fpm, vsftpd. <br>ОС: Ubuntu |
 
 
