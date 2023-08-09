@@ -8,8 +8,7 @@
 | Файл | Описание |
 | :--- | :--- |
 | [Итоговый проект](pdf/sf_final_certification_SAV.pdf) | - итоговый проект по курсу "Системный администратор Linux" онлайн-школы Skillfactory |
-| [Gitea](pdf/gitea.pdf) | - установка и настройка Gitea |
-| [Jenkins](pdf/jenkins.pdf) | - пример выполненного палайна в Jenkins (подготавливается к отправке в репозиторий) |
+| [Jenkins](pdf/jenkins.pdf) | - пример выполненного паплайна в Jenkins |
 
 
 ---
