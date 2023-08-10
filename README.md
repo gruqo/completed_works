@@ -13,34 +13,10 @@
 
 ---
 
-<h3>Примеры написания bash-скриптов и плейбуков/ролей для ansible:</h3>
-
-<br>
-
-**Bash-скрипты:**
-
-|Имя|Описание|
-|:-|:-|
-| [template_for_link](bash_script/README.md) | - подготавливается к отправке в репозиторий |
-
-<br>
-
-
-**Ansible-плейбуки:**
-
-|Имя|Описание|
-| :--- | :--- |
-| [template_for_link](ansible/playbooks/README.md) | - подготавливается к отправке в репозиторий |
-
-
-<br>
-
-
-**Ansible-роли:**
+<h3>Примеры написания ролей для ansible:</h3>
 
 |Имя|Описание|
 |:-|:-|
 | [ubuntu_sys_config](ansible/roles/ubuntu_sys_config/README.md) | - роль для конфигруции ВМ после создания. <br>ОС: Ubuntu |
 | [ubuntu_web_nginx_php74fpm](ansible/roles/ubuntu_web_nginx_php74fpm/README.md) | - роль для установки и настройки: nginx, php7.4-fpm, vsftpd. <br>ОС: Ubuntu |
-
 
