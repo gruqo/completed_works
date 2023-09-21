@@ -1,0 +1,46 @@
+version: "3"
+services:
+  {{ mysql_hostname }}:
+    image: mysql:{{ mysql_version }}
+    container_name: {{ mysql_hostname }}
+    expose:
+      - "{{ mysql_port }}"
+    restart: on-failure
+    volumes:
+      - ./{{ mysql_volume }}/:/var/lib/mysql
+    environment:
+      - MYSQL_HOST={{ mysql_hostname }}
+      - MYSQL_DATABASE={{ mysql_database }}
+      - MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
+      - MYSQL_USER={{ mysql_user_login }}
+      - MYSQL_PASSWORD={{ mysql_user_password }}
+
+  {{ php_hostname }}:
+    build:
+      context: ./{{ php_dir_name }}
+      dockerfile: Dockerfile
+    image: {{ php_hostname }}:test
+    container_name: {{ php_hostname }}
+    expose:
+      - "{{ php_port }}"
+    restart: on-failure
+    volumes:
+      - ./{{ nginx_dir_name }}/{{ nginx_web_dir_host }}/:{{ nginx_web_dir_container }}
+    links:  
+      - {{ mysql_hostname }}
+    depends_on:
+      - {{ mysql_hostname }}
+
+  {{ nginx_hostname }}:
+    build:
+      context: ./{{ nginx_dir_name }}
+      dockerfile: Dockerfile
+    image: {{ nginx_hostname }}:test
+    container_name: {{ nginx_hostname }}
+    ports:
+      - "{{ nginx_port_ext }}:{{ nginx_port_int }}"
+    restart: always
+    links:
+      - {{ php_hostname }}
+    depends_on:
+      - {{ php_hostname }}

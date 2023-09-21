@@ -1,0 +1,39 @@
+---
+# vars file docker_nginx_php_mysql
+
+
+# --- Other variables
+path_dir_base: '/tmp/test_with_vars'
+
+
+# --- Variables for Mysql
+mysql_version: '8.1.0'
+mysql_hostname: 'db'
+mysql_port: 3306
+mysql_database: 'test'
+mysql_root_login: 'root'
+mysql_root_password: 'root'
+mysql_user_login: 'dbuser'
+mysql_user_password: 'dbuser'
+mysql_volume: 'db_volume'
+
+
+# --- Variables for Nginx
+nginx_version: 'latest'
+nginx_hostname: 'web'
+nginx_port_int: 80
+nginx_port_ext: 80
+nginx_dir_name: 'nginx'
+nginx_web_dir_host: 'web'
+nginx_web_dir_container: '/var/www/html/'
+nginx_user: 'nginx'
+nginx_worker_processes: 'auto'
+nginx_worker_connections: 1024
+
+
+# --- Variables for PHP
+php_version: '8.1-fpm'
+php_hostname: 'php'
+php_port: 9000
+php_dir_name: 'php'
+

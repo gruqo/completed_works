@@ -1,0 +1,91 @@
+---
+# tasks file for docker_nginx_php_mysql
+
+- name: Create dicrectories
+  file:
+    path: '{{ path_dir_base }}/{{ item }}'
+    state: directory
+    mode: '0755'
+  loop:
+    - '{{ nginx_dir_name }}'
+    - '{{ php_dir_name }}'
+    - '{{ mysql_volume }}'
+
+- name: Create subdicrectories for nginx
+  file:
+    path: '{{ path_dir_base }}/{{ nginx_dir_name }}/{{ nginx_web_dir_host }}'
+    state: directory
+    mode: '0755'
+
+- name: Create files from templates
+  template:
+    src: '{{ item.path_src }}'
+    dest: '{{ path_dir_base }}/{{ item.path_dst }}'
+    mode: '0644'
+  loop:
+    - { path_src: 'docker-compose.j2', path_dst: 'docker-compose.yml' }
+    - { path_src: 'php_Dockerfile.j2', path_dst: '{{ php_dir_name }}/Dockerfile' }
+    - { path_src: 'nginx_Dockerfile.j2', path_dst: '{{ nginx_dir_name }}/Dockerfile' }
+
+- name: Create nginx.conf from templates
+  template:
+    src: nginx_conf.j2
+    dest: '{{ path_dir_base }}/{{ nginx_dir_name }}/nginx.conf'
+    mode: '0644'
+  register: nginx_config
+
+- name: Create default.conf for site in nginx
+  template:
+    src: nginx_site_conf.j2
+    dest: '{{ path_dir_base }}/{{ nginx_dir_name }}/default.conf'
+    mode: '0644'
+  register: nginx_site_config
+
+- name: Create index.php from templates
+  template:
+    src: nginx_web_page.j2
+    dest: '{{ path_dir_base }}/{{ nginx_dir_name }}/{{ nginx_web_dir_host }}/index.php'
+    mode: '0644'
+  register: nginx_page
+
+- name: Recursively change ownership of a directory for docker files
+  file:
+    path: '{{ path_dir_base }}'
+    state: directory
+    recurse: yes
+    owner: '{{ ansible_ssh_user }}'
+    group: '{{ ansible_ssh_user }}'
+
+# - name: Add module community.docker for ansible on node
+  local_action: ansible.builtin.command ansible-galaxy collection install community.docker
+  become: false
+  ignore_errors: true
+
+- name: Get infos on container {{ mysql_hostname }}
+  docker_container_info:
+    name: '{{ mysql_hostname }}'
+  register: mysql_container_status
+
+- name: Get infos on container {{ php_hostname }}
+  docker_container_info:
+    name: '{{ php_hostname }}'
+  register: php_container_status
+
+- name: Get infos on container {{ nginx_hostname }}
+  docker_container_info:
+    name: '{{ nginx_hostname }}'
+  register: nginx_container_status
+
+- name: Start docker containers
+  docker_compose:
+    project_src: '{{ path_dir_base }}'
+    build: yes
+  when: mysql_container_status is not false and php_container_status is not false and nginx_container_status is not false
+
+- name: Restart services {{ nginx_hostname }}
+  docker_compose:
+    project_src: '{{ path_dir_base }}'
+    build: true
+    restarted: true
+  when: nginx_config.changed
+
