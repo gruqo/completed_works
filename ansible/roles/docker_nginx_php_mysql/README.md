@@ -12,7 +12,7 @@ docker_nginx_php_mysql
 ------------
 
 Установленый docker-compose.  
-С плагином docker-compose-plugin для docker получались отрицательные резултаты.  
+С плагином docker-compose-plugin для docker получались отрицательные результаты.  
 
 <br>
 
