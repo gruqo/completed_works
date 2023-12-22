@@ -9,7 +9,7 @@
 | :--- | :--- |
 | [Итоговый проект](pdf/sf_final_certification_SAV.pdf) | - итоговый проект по курсу "Системный администратор Linux" онлайн-школы Skillfactory |
 | [Jenkins](pdf/jenkins.pdf) | - пример выполненного паплайна в Jenkins |
-| [Kubernetes](pdf/k8s.pdf) | - в работе. Текущее состояние: развернут minikube с веб-доступом через Rancher |
+| [Kubernetes](pdf/k3s.pdf) | - пример запуска приложений в кластере Kubernetes(K3S) |
 
 ---
 
@@ -20,4 +20,3 @@
 | [ubuntu_sys_config](ansible/roles/ubuntu_sys_config/README.md) | - роль для конфигруции ВМ после создания. <br>ОС: Ubuntu |
 | [ubuntu_web_nginx_php74fpm](ansible/roles/ubuntu_web_nginx_php74fpm/README.md) | - роль для установки и настройки: nginx, php7.4-fpm, vsftpd. <br>ОС: Ubuntu |
 | [docker_nginx_php_mysql](/ansible/roles/docker_nginx_php_mysql/README.md) | - роль для разворачивания приложения "Nginx+PHP+Mysql" в docker-контейнерах с использованием docker-compose.yml |
-
