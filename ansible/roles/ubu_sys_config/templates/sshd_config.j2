@@ -45,7 +45,7 @@ IgnoreRhosts yes
 UsePAM yes
 
 #AllowAgentForwarding yes
-AllowTcpForwarding yes
+#AllowTcpForwarding yes
 #GatewayPorts no
 X11Forwarding no
 #X11DisplayOffset 10
@@ -63,8 +63,8 @@ PrintMotd no
 #PidFile /var/run/sshd.pid
 #MaxStartups 10:30:100
 #PermitTunnel no
-#ChrootDirectory none
-#VersionAddendum none
+ChrootDirectory none
+VersionAddendum none
 
 #Banner none
 
@@ -76,8 +76,10 @@ AcceptEnv LANG LC_*
 
 #Subsystem sftp /usr/lib/openssh/sftp-server
 Subsystem sftp internal-sftp
-Match group {{ ubu_sys_config_vars.sshd.group_name_sftp }}
+Match User {{ ubu_sys_config_vars.sshd.user_name_sftp }}
        ChrootDirectory {{ ubu_sys_config_vars.sshd.path_dir_sftp }}
        ForceCommand internal-sftp
-       X11Forwarding no
+       PermitTunnel no
+       AllowAgentForwarding no
        AllowTcpForwarding no
+       X11Forwarding no

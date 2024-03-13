@@ -34,12 +34,6 @@
     name: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
     state: present
 
-- name: Adding ansible_ssh_user to group {{ ubu_sys_config_vars.sshd.group_name_sftp }}
-  user:
-    name: "{{ ansible_ssh_user }}"
-    groups: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
-    append: true
-
 - name: Create a directory for sftp
   ansible.builtin.file:
     path: "{{ ubu_sys_config_vars.sshd.path_dir_sftp }}"
@@ -53,6 +47,7 @@
     name: "{{ ubu_sys_config_vars.sshd.user_name_sftp }}"
     home: "{{ ubu_sys_config_vars.sshd.path_dir_sftp }}/upload"
     group: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
+    password: "{{ ubu_sys_config_vars.sshd.user_pass_sftp | password_hash('sha512') }}"
     shell: /sbin/nologin
 
 - name: Check ssh-key
