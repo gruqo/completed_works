@@ -1,6 +1,5 @@
-#       $OpenBSD: sshd_config,v 1.101 2017/03/14 07:19:07 djm Exp $
 
-Port {{ ssh_port }}
+Port {{ ubu_sys_config_vars.sshd.port }}
 #AddressFamily any
 #ListenAddress 0.0.0.0
 #ListenAddress ::
@@ -15,10 +14,10 @@ HostKey /etc/ssh/ssh_host_ed25519_key
 SyslogFacility AUTHPRIV
 LogLevel INFO
 
-LoginGraceTime 2m
+LoginGraceTime 20
 StrictModes yes
 MaxStartups 3:30:9
-MaxAuthTries 3
+MaxAuthTries 2
 MaxSessions 10
 
 PermitRootLogin No
@@ -46,7 +45,7 @@ IgnoreRhosts yes
 UsePAM yes
 
 #AllowAgentForwarding yes
-#AllowTcpForwarding yes
+AllowTcpForwarding yes
 #GatewayPorts no
 X11Forwarding no
 #X11DisplayOffset 10
@@ -75,4 +74,10 @@ AcceptEnv LANG LC_*
 #AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
 #AcceptEnv XMODIFIERS
 
-Subsystem       sftp    /usr/lib/openssh/sftp-server
+#Subsystem sftp /usr/lib/openssh/sftp-server
+Subsystem sftp internal-sftp
+Match group {{ ubu_sys_config_vars.sshd.group_name_sftp }}
+       ChrootDirectory {{ ubu_sys_config_vars.sshd.path_dir_sftp }}
+       ForceCommand internal-sftp
+       X11Forwarding no
+       AllowTcpForwarding no

@@ -1,0 +1,46 @@
+---
+# defaults file for ubu_sys_config
+
+ubu_sys_config_vars:
+  common:
+    my_TZ: "Europe/Moscow"
+  change_pass:
+    - name: "root"
+      new_pass: "p@ssw0rd123"
+    - name: '{{ ansible_ssh_user }}'
+      new_pass: "Qw-Er+Ty"
+  soft:
+    - tmux
+    # - mc
+    - htop
+    - git
+    - zip
+    - tree
+    - vim
+    - vim-addon-manager
+    - vim-common
+    - vifm
+    # - vim-editorconfig
+    # - vim-fugitive
+    # - vim-khuno
+    # - vim-lastplace
+    # - vim-pathogen
+    # - vim-python-jedi
+    #  vim-runtime
+    # - vim-syntastic
+    # - vim-syntax-docker
+    # - vim-tabular
+    # - vim-voom
+    - dstat
+    - dnsutils
+    - ufw
+    # - ranger
+    # - tcpdump
+    # - nmap
+  sshd:
+    port: '22'
+    path_dir_sftp: "/srv/sftp"
+    group_id_sftp: "1100"
+    group_name_sftp: "sftp-gr"
+    user_id_sftp: "1100"
+    user_name_sftp: "sftp-u"

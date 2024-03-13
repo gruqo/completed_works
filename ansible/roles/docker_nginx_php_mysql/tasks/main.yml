@@ -56,22 +56,22 @@
     owner: '{{ ansible_ssh_user }}'
     group: '{{ ansible_ssh_user }}'
 
-# - name: Add module community.docker for ansible on node
+- name: Add module community.docker for ansible on node
   local_action: ansible.builtin.command ansible-galaxy collection install community.docker
   become: false
   ignore_errors: true
 
-- name: Get infos on container {{ mysql_hostname }}
+- name: Get info on container {{ mysql_hostname }}
   docker_container_info:
     name: '{{ mysql_hostname }}'
   register: mysql_container_status
 
-- name: Get infos on container {{ php_hostname }}
+- name: Get info on container {{ php_hostname }}
   docker_container_info:
     name: '{{ php_hostname }}'
   register: php_container_status
 
-- name: Get infos on container {{ nginx_hostname }}
+- name: Get info on container {{ nginx_hostname }}
   docker_container_info:
     name: '{{ nginx_hostname }}'
   register: nginx_container_status

@@ -1,0 +1,144 @@
+---
+# tasks file for ubu_sys_config
+
+- name: Set timezone to {{ ubu_sys_config.my_TZ }}
+  community.general.timezone:
+    name: "{{ ubu_sys_config_vars.common.my_TZ }}"
+
+- name: Change password for users
+  user:
+    name: "{{ item.name }}"
+    password: "{{ item.new_pass | password_hash('sha512') }}"
+  with_items: "{{ ubu_sys_config_vars.change_pass }}"
+
+- name: Install additional soft
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - "{{ ubu_sys_config_vars.soft }}"
+
+- name: Change default text editor
+  ansible.builtin.shell: "update-alternatives --set editor /usr/bin/vim.basic"
+  args:
+    executable: /bin/bash
+
+- name: Uninstall nano package
+  ansible.builtin.apt:
+    name: nano
+    state: absent
+    purge: true
+
+- name: Add group for {{ ubu_sys_config_vars.sshd.group_name_sftp }}
+  ansible.builtin.group:
+    name: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
+    state: present
+
+- name: Adding ansible_ssh_user to group {{ ubu_sys_config_vars.sshd.group_name_sftp }}
+  user:
+    name: "{{ ansible_ssh_user }}"
+    groups: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
+    append: true
+
+- name: Create a directory for sftp
+  ansible.builtin.file:
+    path: "{{ ubu_sys_config_vars.sshd.path_dir_sftp }}"
+    state: directory
+    owner: root
+    group: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
+    mode: '0751'
+
+- name: Add the user {{ ubu_sys_config_vars.sshd.user_name_sftp }}
+  ansible.builtin.user:
+    name: "{{ ubu_sys_config_vars.sshd.user_name_sftp }}"
+    home: "{{ ubu_sys_config_vars.sshd.path_dir_sftp }}/upload"
+    group: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
+    shell: /sbin/nologin
+
+- name: Check ssh-key
+  stat:
+    path: "{{ role_path }}/files/for_sftp"
+  register: key_file
+  delegate_to: localhost
+  become: false
+
+- name: Generate an OpenSSH keypair
+  community.crypto.openssh_keypair:
+    path: "{{ role_path }}/files/for_sftp"
+    type: "ed25519"
+    comment: "for_sftp"
+  delegate_to: localhost
+  become: false
+  when: not key_file.stat.exists
+
+- name: Create a directory for ssh access
+  ansible.builtin.file:
+    path: "{{ ubu_sys_config_vars.sshd.path_dir_sftp }}/upload/.ssh"
+    state: directory
+    owner: "{{ ubu_sys_config_vars.sshd.user_name_sftp }}"
+    group: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
+    mode: '0700'
+
+- name: Pause for 10 seconds
+  ansible.builtin.pause:
+    seconds: 10
+
+- name: Read pub ssh-key
+  ansible.builtin.slurp:
+    src: "{{ role_path }}/files/for_sftp.pub"
+  register: public_key_content
+  delegate_to: localhost
+  become: false
+
+- name: Add pub ssh-key in authorized_keys
+  ansible.builtin.lineinfile:
+    dest: "{{ ubu_sys_config_vars.sshd.path_dir_sftp }}/upload/.ssh/authorized_keys"
+    line: "{{ public_key_content.content | b64decode }}"
+    create: true
+    owner: "{{ ubu_sys_config_vars.sshd.user_name_sftp }}"
+    group: "{{ ubu_sys_config_vars.sshd.group_name_sftp }}"
+    mode: "0600"
+
+- name: Copy sshd-config
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0644'
+    validate: /usr/sbin/sshd -t -f %s
+    backup: true
+  notify:
+    - Restart sshd
+
+- name: Create a directory for vim-config
+  ansible.builtin.file:
+    path: "/home/{{ ansible_ssh_user }}/.vim/autoload"
+    state: directory
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: '0755'
+
+- name: Download vim-plug
+  get_url:
+    url: "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+    dest: "/home/{{ ansible_ssh_user }}/.vim/autoload/plug.vim"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: '0644'
+
+- name: Copy vim-config
+  ansible.builtin.copy:
+    src: vim/vimrc
+    dest: "/home/{{ ansible_ssh_user }}/.vimrc"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: '0644'
+
+- name: Copy tmux-config
+  ansible.builtin.copy:
+    src: tmux.conf
+    dest: "/home/{{ ansible_ssh_user }}/.tmux.conf"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: '0644'

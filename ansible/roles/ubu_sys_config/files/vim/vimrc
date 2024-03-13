@@ -1,0 +1,172 @@
+" -----
+set encoding=utf8
+set termencoding=utf-8
+set fileencodings=utf8,cp1251
+set ffs=unix,dos,mac
+
+set ignorecase
+set smartcase
+set hlsearch
+
+set expandtab
+set smarttab
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+
+set number
+
+set foldcolumn=2
+
+set noerrorbells
+set novisualbell
+
+set mouse=a
+  
+map <space> /
+map <C-space> ?
+
+map <C-j> <C-W>j
+map <C-k> <C-W>k
+map <C-h> <C-W>h
+map <C-l> <C-W>l
+
+map <leader>ss :setlocal spell!<CR>
+
+" -----
+let mapleader = ','
+
+" ----- tree-view
+let g:netrw_winsize = -28
+let g:netrw_liststyle = 3
+let g:netrw_sort_sequence = '[\/]$,*'
+let g:netrw_browse_split = 3
+
+" ----- reloads .vimrc -- making all changes active
+map <silent> <Leader>v :source ~/.vimrc<CR>:PlugInstall<CR>:bdelete<CR>:exe ":echo 'vimrc reloaded'"<CR>
+
+"" ----- color
+"set background=dark
+"colorscheme spacecamp_lite
+"
+"" Returns true if the color hex value is light
+"function! IsHexColorLight(color) abort
+"  let l:raw_color = trim(a:color, '#')
+"
+"  let l:red = str2nr(substitute(l:raw_color, '(.{2}).{4}', '1', 'g'), 16)
+"  let l:green = str2nr(substitute(l:raw_color, '.{2}(.{2}).{2}', '1', 'g'), 16)
+"  let l:blue = str2nr(substitute(l:raw_color, '.{4}(.{2})', '1', 'g'), 16)
+"
+"  let l:brightness = ((l:red * 299) + (l:green * 587) + (l:blue * 114)) / 1000
+"  
+"  return l:brightness > 155
+"endfunction
+
+" ===== Plugins
+call plug#begin()
+
+"" ----- for comment
+"Plug 'tomtom/tcomment_vim'
+"noremap <silent> <Leader>cc :TComment<CR>
+
+"" ----- search
+"Plug 'ctrlpvim/ctrlp.vim'
+"" Leader F is for file related mappîngs (open, browse...) 
+"nnoremap <silent> <Leader>f :CtrlP<CR>
+"nnoremap <silent> <Leader>fm :CtrlPMRU<CR>
+"
+"" Ctrl B for buffer related mappings
+"nnoremap <silent> <Leader>b :CtrlPBuffer<CR> " cycle between buffer
+"nnoremap <silent> <Leader>bb :bn<CR> "create (N)ew buffer
+"nnoremap <silent> <Leader>bd :bdelete<CR> "(D)elete the current buffer
+"nnoremap <silent> <Leader>bu :bunload<CR> "(U)nload the current buffer
+"nnoremap <silent> <Leader>bl :setnomodifiable<CR> " (L)ock the current buffer"
+
+" -----
+Plug 'itchyny/lightline.vim'
+Plug 'sheerun/vim-polyglot'
+Plug 'editorconfig/editorconfig-vim'
+Plug 'vim-syntastic/syntastic'
+Plug 'LunarWatcher/auto-pairs'
+Plug 'maxboisvert/vim-simple-complete'
+Plug 'godlygeek/tabular'
+
+" ----- Themes And Colors
+Plug 'altercation/vim-colors-solarized'
+
+" ----- File-browse
+"Plug 'scrooloose/nerdtree'
+Plug 'jistr/vim-nerdtree-tabs'
+Plug 'ryanoasis/vim-devicons'
+Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+
+" ----- Git
+Plug 'tpope/vim-fugitive'
+Plug 'junegunn/gv.vim'
+Plug 'idanarye/vim-merginal'
+
+call plug#end()
+
+
+" ----- CONFIGURATION Syntastic
+
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+
+"" ----- CONFIGURATION NERDTree
+"
+"map <F1> :NERDTreeMirror<CR>
+"map <F1> :NERDTreeToggle<CR>
+"
+"autocmd vimenter * NERDTree
+"let NERDTreeShowHidden=1
+"
+"autocmd BufEnter NERD_tree_* | execute 'normal R'
+"au CursorHold * if exists("t:NerdTreeBufName") | call <SNR>15_refreshRoot() | endif
+"
+"augroup DIRCHANGE
+"    au!
+"    autocmd DirChanged global :NERDTreeCWD
+"augroup END
+"
+"autocmd BufWinEnter * if getcmdwintype() == '' | silent NERDTreeMirror | endif
+"autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+"
+"let NERDTreeCustomOpenArgs={'file':{'where': 't'}}
+"
+"let g:NERDTreeGitStatusIndicatorMapCustom = {
+"  \ 'Modified'  : 'M',
+"  \ 'Staged'    : 'S',
+"  \ 'Untracked' : '*',
+"  \ 'Renamed'   : 'R',
+"  \ 'Unmerged'  : 'U',
+"  \ 'Deleted'   : '!',
+"  \ 'Dirty'     : 'D',
+"  \ 'Clean'     : 'C',
+"  \ 'Ignored'   : 'I',
+"  \ 'Unknown'   : '?'
+"\ }
+
+
+" ----- CONFIGURATION Other
+
+" --- auto-pairs
+let g:AutoPairsShortcutToggle = '<C-P>'
+
+" --- vim-lightline
+let g:lightline = { 'colorscheme': 'solarized', }
+set laststatus=2
+set noshowmode
+
+" --- tabular
+vnoremap <silent> <Leader>cee    :Tabularize /=<CR>
+vnoremap <silent> <Leader>cet    :Tabularize /#<CR>
+vnoremap <silent> <Leader>ce     :Tabularize /

@@ -2,4 +2,4 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - ubuntu_sys_config
+    - ubu_sys_config
