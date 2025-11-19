@@ -1,0 +1,41 @@
+- name: Set web server command based on type
+  set_fact:
+    web_server: "{{ web_server }}"
+
+- name: Get version "{{ web_server }}"
+  shell: "{{ web_server }} -v"
+  register: web_server_version
+  ignore_errors: yes
+  changed_when: false
+
+- name: Display version "{{ web_server }}"
+  debug:
+    msg: "{{ web_server_version.stderr }}"
+
+- name: Get list of all Angie modules
+  ansible.builtin.find:
+    paths: "/usr/lib/{{ web_server }}/modules/"
+    patterns: "*.so"
+    file_type: file
+  register: angie_modules
+
+- name: Display only module filenames
+  ansible.builtin.debug:
+    msg: "{{ angie_modules.files | map(attribute='path') | map('basename') | list }}"
+
+- name: Display 0 when no modules found
+  ansible.builtin.debug:
+    msg: "0"
+  when: angie_modules.files | length == 0
+
+- name: Test configuration
+  ansible.builtin.command: "{{ web_server }} -t"
+  register: web_server_test
+  changed_when: false
+  check_mode: false
+
+- name: Display of test configuration
+  ansible.builtin.debug:
+    msg: |
+      {{ web_server }} configuration test result:
+      {{ web_server_test.stderr }}

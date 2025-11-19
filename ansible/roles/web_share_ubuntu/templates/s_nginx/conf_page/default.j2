@@ -1,0 +1,52 @@
+server {
+    server_name {{ common.net.full_fqdn }};
+    listen 80;
+
+    location / {
+        root {{ nginx.websites.shared_dirs }}/{{ nginx.websites.default.name }};
+        index {{ nginx.websites.default.page_name }};
+
+        set $debug_header $http_x_test_request;
+        #if ($http_x_test_request = "{{ nginx.websites.default.header.value }}") {
+        #    return {{ nginx.websites.default.header.status_def }} "OK - Test passed";
+        #}
+        if ($http_x_test_request = "") {
+            return 400 "No X-Test-Request header received";
+        }
+        if ($http_x_test_request != "{{ nginx.websites.default.header.value }}") {
+            return 400 "Invalid header. Received: '$http_x_test_request'";
+        }
+        return 200 "Success";
+
+        access_log {{ nginx.log.dirs }}/{{ common.net.full_fqdn }}_access.log;
+        error_log {{ nginx.log.dirs }}/{{ common.net.full_fqdn }}_error.log;
+    }
+# ----------------------------------------------------------------------------
+    # for block "{{ php_fpm.websites.php.name }}"
+
+
+# ----------------------------------------------------------------------------
+    # for block "{{ ftp.websites.ftp.name }}"
+
+
+# ----------------------------------------------------------------------------
+    # for block "proxy"
+
+
+#    location /{{ res_proxy.name }}/ {
+#        proxy_pass http://{{ apache.net.servername }}:{{ apache.net.port }};
+#        proxy_set_header Host $host;
+#        proxy_set_header X-Real-IP $remote_addr;
+#        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#        proxy_set_header X-Forwarded-Proto $scheme;
+#
+#        access_log   {{ nginx.log.dirs }}/{{ apache.res_info.name }}_access.log;
+#        error_log    {{ nginx.log.dirs }}/{{ apache.res_info.name }}_error.log;
+#    }
+
+    location = /favicon.ico {
+        limit_except GET HEAD POST { deny all; }
+        log_not_found off;
+        access_log off;
+    }
+}

@@ -1,0 +1,173 @@
+---
+# Tasks for install Apache
+
+# - name: Add fake fqdn in /etc/hosts
+#   lineinfile:
+#     path: /etc/hosts
+#     line: "127.0.1.1 {{ apache.net.servername }}"
+
+- name: Update and upgrade apt packages
+  ansible.builtin.apt:
+    upgrade: true
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install Apache2
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    state: present
+  loop: 
+    - "{{ apache.list_soft }}"
+    - "{{ apache.php.list_soft }}"
+    - "{{ apache.php.add_soft }}"
+
+- name: Enable the Apache2 modules
+  community.general.apache2_module:
+    state: present
+    name: "{{ item }}"
+  loop: "{{ apache.list_mods }}"
+
+- name: Create dir for apache-sites
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common.user_root }}"
+    group: "{{ common.user_root }}"
+    mode: "0751"
+  loop:
+    - "{{ apache.sites_dir }}"
+    - "{{ apache.sites_dir }}/{{ apache.site.name }}"
+    # - "{{ apache.site.default.path_dir }}"
+
+- name: Copy files for demo pages
+  ansible.builtin.copy:
+    src: "page/single/apache_index.html"
+    dest: "{{ apache.site.default.path_dir }}/index.html"
+    owner: "{{ common.user_root }}"
+    group: "{{ common.user_root }}"
+    mode: "0644"
+  loop:
+
+
+
+
+
+
+
+
+
+
+# - name: create dir info_page
+#   ansible.builtin.command: sudo mkdir -p /srv/www-apache/info
+
+# - name: copy info.php to server
+#   ansible.builtin.copy:
+#     src: site_files/info/info.php
+#     dest: /srv/www-apache/info/info.php
+#     owner: '{{ user }}'
+#     group: '{{ group }}'
+#     mode: '644'
+
+# - name: create dir form_page
+#   ansible.builtin.command: sudo mkdir -p /srv/www-apache/form
+
+# - name: copy form.php to server
+#   ansible.builtin.copy:
+#     src: site_files/form/form.php
+#     dest: /srv/www-apache/form/form.php
+#     owner: '{{ user }}'
+#     group: '{{ group }}'
+#     mode: '0644'
+
+
+
+
+
+
+
+- name: Disable default site config
+  ansible.builtin.file:
+    path: "/etc/apache2/sites-enabled"
+    state: absent
+
+- name: Create directory for sites config
+  ansible.builtin.file:
+    path: "/etc/apache2/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0751"
+  loop:
+    - sites-available
+    - sites-enabled
+
+- name: Change ports in config file
+  ansible.builtin.lineinfile:
+    path: "/etc/apache2/ports.conf"
+    backrefs: true
+    regexp: "^Listen 80$"
+    line: "Listen {{ apache.net.port }}"
+
+- name: Copy my apache2-config file
+  ansible.builtin.template:
+    src: "s_apache/apache2.j2"
+    dest: /etc/apache2/apache2.conf
+    owner: root
+    group: root
+    mode: '644'
+    backup: true
+
+- name: Copy config for demo pages
+  ansible.builtin.template:
+    src: "s_apache/conf_page/{{ item }}.j2"
+    dest: "/etc/apache2/sites-available/{{ item }}.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - default
+    - info
+    - form
+
+- name: Enable demo pages
+  ansible.builtin.file:
+    src: /etc/apache2/sites-available/{{ item }}.conf
+    dest: /etc/apache2/sites-enabled/{{ item }}.conf
+    owner: root
+    group: root
+    state: link
+  loop:
+    - default
+    - info
+    - form
+  notify:
+    - Start apache2
+
+- name: Check nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+  ignore_errors: true
+  register: nginx_Check
+
+- name: Change default configs
+  block:
+    - name: Insert special part into "{{ nginx.sites_config_default }}"
+      blockinfile:
+        path: "{{ nginx.sites_config_default }}"
+        block: |
+          location /proxy {
+              proxy_pass http://{{ apache.net.servername }}:{{ apache.net.port }}/;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          
+              access_log   /var/log/nginx/proxy-http-apache_access.log;
+              error_log    /var/log/nginx/proxy-http-apache_error.log;
+          }
+        insertafter: '# for block "proxy"'
+        marker: "# {mark} ANSIBLE MANAGED BLOCK for proxy"
+  notify:
+    - Restart nginx
+  when: nginx_Check.state == "started"

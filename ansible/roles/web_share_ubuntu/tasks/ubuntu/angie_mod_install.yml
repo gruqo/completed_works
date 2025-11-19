@@ -1,0 +1,42 @@
+---
+# Angie: modules install 
+
+- name: Install Angie
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    state: present
+  loop: "{{ angie.list_mod }}"
+
+- name: Find all Angie modules
+  ansible.builtin.find:
+    paths: /usr/lib/angie/modules/
+    patterns: "*.so"
+    file_type: file
+  register: all_modules
+
+- name: Filter out debug modules
+  ansible.builtin.set_fact:
+    angie_modules: 
+      files: "{{ all_modules.files | rejectattr('path', 'match', '.*-debug\\.so$') | list }}"
+
+- name: Insert all modules into Angie config
+  ansible.builtin.blockinfile:
+    path: "{{ angie.conf.srv }}"
+    block:  |
+      {% for module in angie_modules.files %}
+      load_module {{ module.path }};
+      {% endfor %}
+    insertafter: 'for block "module"'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK for enabled module"
+  notify:
+    - Reload angie
+
+- name: Check tasks
+  include_tasks: short_tasks/a-n_check_base.yml
+  vars:
+    web_server: "angie"
+
+- name: Check tasks additional
+  include_tasks: short_tasks/a-n_check_add.yml
+  vars:
+    web_server: "angie"

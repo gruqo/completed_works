@@ -1,0 +1,110 @@
+---
+# ----- add test php-page
+
+# - name: create dir info_page
+#   ansible.builtin.command: sudo mkdir -p /srv/www-apache/info
+
+# - name: copy info.php to server
+#   ansible.builtin.copy:
+#     src: site_files/info/info.php
+#     dest: /srv/www-apache/info/info.php
+#     owner: '{{ user }}'
+#     group: '{{ group }}'
+#     mode: '644'
+
+# - name: change owner for apache-sites
+#   ansible.builtin.command: sudo chown -R {{ user }}:{{ group }} /srv/www-apache/
+
+# - name: copy config-page info
+#   ansible.builtin.copy:
+#     src: site_config/info.conf
+#     dest: /etc/apache2/sites-available/info.conf
+#     owner: root
+#     group: root
+#     mode: '644'
+
+# - name: enable info_page
+#   ansible.builtin.file:
+#     src: /etc/apache2/sites-available/info.conf
+#     dest: /etc/apache2/sites-enabled/info.conf
+#     owner: root
+#     group: root
+#     state: link
+
+# - name: restart httpd
+#   ansible.builtin.service:
+#     name: apache2
+#     state: restarted
+
+# ----- add page-form
+
+# - name: disabled all site
+#   ansible.builtin.command: sudo find /etc/apache2/sites-enabled/ -type l -delete
+
+# - name: create dir form_page
+#   ansible.builtin.command: sudo mkdir -p /srv/www-apache/form
+
+# - name: copy form.php to server
+#   ansible.builtin.copy:
+#     src: site_files/form/form.php
+#     dest: /srv/www-apache/form/form.php
+#     owner: '{{ user }}'
+#     group: '{{ group }}'
+#     mode: '0644'
+
+# - name: copy action.php to server
+#   ansible.builtin.copy:
+#     src: site_files/form/action.php
+#     dest: /srv/www-apache/form/action.php
+#     owner: '{{ user }}'
+#     group: '{{ group }}'
+#     mode: '0644'
+
+# - name: copy output.php to server
+#   ansible.builtin.copy:
+#     src: site_files/form/output.php
+#     dest: /srv/www-apache/form/output.php
+#     owner: '{{ user }}'
+#     group: '{{ group }}'
+#     mode: '0644'
+
+# - name: change owner for apache-sites
+#   ansible.builtin.command: sudo chown -R {{ user }}:{{ group }} /srv/www-apache/
+
+# - name: copy config-page form
+#   ansible.builtin.copy:
+#     src: site_config/form.conf
+#     dest: /etc/apache2/sites-available/form.conf
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+# - name: enable form_page
+#   ansible.builtin.file:
+#     src: /etc/apache2/sites-available/form.conf
+#     dest: /etc/apache2/sites-enabled/form.conf
+#     owner: root
+#     group: root
+#     state: link
+
+# - name: change hosts-file in templates
+#   ansible.builtin.shell: |
+#     sudo sh -c "echo '127.0.0.1 info-apache.ubu.srv-test.space' >> /etc/cloud/templates/hosts.debian.tmpl"
+#     sudo sh -c "echo '127.0.0.1 form-apache.ubu.srv-test.space' >> /etc/cloud/templates/hosts.debian.tmpl"
+#     sudo sh -c "echo '127.0.0.1 form-apache.proxy.ubu.srv-test.space' >> /etc/cloud/templates/hosts.debian.tmpl"
+#   args:
+#     executable: /bin/bash
+
+# - name: change hosts-file
+#   ansible.builtin.shell: |
+#     sudo cp /etc/hosts /etc/hosts_backup
+#     sudo sh -c "echo '127.0.0.1 info-apache.ubu.srv-test.space' >> /etc/hosts"
+#     sudo sh -c "echo '127.0.0.1 form-apache.ubu.srv-test.space' >> /etc/hosts"
+#     sudo sh -c "echo '127.0.0.1 form-apache.proxy.ubu.srv-test.space' >> /etc/hosts"
+#   args:
+#     executable: /bin/bash
+
+# - name: restart httpd
+#   ansible.builtin.service:
+#     name: apache2
+#     state: restarted

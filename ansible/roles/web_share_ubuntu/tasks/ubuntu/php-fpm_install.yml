@@ -1,0 +1,69 @@
+---
+# Tasks for install php-fpm
+
+- name: Install php-fpm version-"{{ php_fpm.vers }}"
+  ansible.builtin.apt:
+    name: "php{{ php_fpm.vers }}-{{ item }}"
+    state: present
+  loop: "{{ php_fpm.list_soft }}"
+
+- name: Create dir for files of website
+  include_tasks: short_tasks/dirs_common.yml
+
+- name: Create dir for info-page
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0711"
+  loop: 
+    - "{{ php_fpm.websites.shared_dirs }}"
+
+- name: Create info-page
+  ansible.builtin.copy:
+    src: "{{ php_fpm.websites.php.dir_templ }}/{{ php_fpm.websites.php.page_name }}"
+    dest: "{{ php_fpm.websites.shared_dirs }}/{{ php_fpm.websites.php.page_name }}"
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0644"
+
+# TODO: переделать /etc/php/{{ php_fpm.vers }}/fpm/php.ini
+- name: Copy my php.ini
+  ansible.builtin.copy:
+    src: "{{ php_fpm.conf.srv_templ }}"
+    dest: "/etc/php/{{ php_fpm.vers }}/fpm/php.ini"
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  notify:
+    - Restart php
+
+- name: Check nginx
+  service:
+    name: nginx
+    state: started
+  ignore_errors: true
+  register: nginx_service
+
+- name: Change default configs
+  block:
+    - name: Insert special part into "{{ nginx.conf.site_anable }}/{{ nginx.conf.page_name_def }}"
+      blockinfile:
+        path: "{{ nginx.conf.site_anable }}/{{ nginx.conf.page_name_def }}"
+        block: |
+          location /{{ php_fpm.websites.php.name }} {
+              root {{ php_fpm.websites.shared_dirs }};
+              index {{ php_fpm.websites.php.page_name }};
+          
+              location /{{ php_fpm.websites.php.name }} {
+                  fastcgi_pass unix:/var/run/php/php-fpm.sock;
+                  fastcgi_param SCRIPT_FILENAME {{ php_fpm.websites.shared_dirs }}/{{ php_fpm.websites.php.page_name }};
+                  include fastcgi_params;
+              }
+          }
+        insertafter: '# for block "{{ php_fpm.websites.php.name }}"'
+        marker: "# {mark} ANSIBLE MANAGED BLOCK for {{ php_fpm.websites.php.name }}"
+  notify:
+    - Reload nginx

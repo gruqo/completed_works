@@ -1,0 +1,58 @@
+---
+# Angie: install 
+
+- name: Add Angie signing key
+  ansible.builtin.apt_key:
+    url: "{{ angie.repo.key_sign }}"
+    state: present
+
+- name: Add Angie repository with allow-insecure
+  ansible.builtin.apt_repository:
+    repo: "deb [allow-insecure=yes] https://download.angie.software/angie/{{ ansible_facts['distribution'] | lower }}/{{ ansible_facts['distribution_version'] }} {{ ansible_facts['distribution_release'] }} main"
+    state: present
+    update_cache: yes
+
+- name: Update and upgrade apt packages
+  ansible.builtin.apt:
+    upgrade: true
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install Angie
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    state: present
+  loop: "{{ angie.list_soft }}"
+
+- name: Block for Angie config
+  block:
+    - name: Check if angie.origin exists
+      stat:
+        path: "{{ angie.conf.srv | splitext | first }}.origin"
+      register: conf_srv
+
+    - name: Rename dafault config
+      ansible.builtin.copy:
+        src: "{{ angie.conf.srv }}"
+        dest: "{{ angie.conf.srv | splitext | first }}.origin"
+        remote_src: yes
+      when: not conf_srv.stat.exists
+
+    - name: Remove angie.config
+      ansible.builtin.file:
+        path: "{{ angie.conf.srv }}"
+        state: absent
+      when: not conf_srv.stat.exists
+
+    - name: Create angie.config from template
+      ansible.builtin.template:
+        src: "{{ angie.conf.srv_templ }}"
+        dest: "{{ angie.conf.srv }}"
+        owner: "{{ common.root_sys }}"
+        group: "{{ common.root_sys }}"
+        mode: "0644"
+
+- name: Check tasks
+  include_tasks: short_tasks/a-n_check_base.yml
+  vars:
+    web_server: "angie"

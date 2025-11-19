@@ -1,0 +1,52 @@
+---
+# Nginx: add default page
+
+- name: Create dir for files of website
+  include_tasks: short_tasks/dirs_common.yml
+
+- name: Create directory for sites files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0751"
+  loop:
+    - "{{ nginx.websites.shared_dirs }}"
+    - "{{ nginx.websites.shared_dirs }}/{{ nginx.websites.default.name }}"
+
+- name: Copy files for default pages
+  ansible.builtin.copy:
+    src: "{{ nginx.websites.default.dir_templ }}/{{ nginx.websites.default.page_name }}"
+    dest: "{{ nginx.websites.shared_dirs }}/{{ nginx.websites.default.name }}/{{ nginx.websites.default.page_name }}"
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0644"
+
+- name: Create config for default pages from template
+  ansible.builtin.template:
+    src: "{{ nginx.conf.page_templ_def }}"
+    dest: "{{ nginx.conf.site_avail }}/{{ nginx.conf.page_name_def }}"
+    owner: "{{ common.root_sys }}"
+    group: "{{ common.root_sys }}"
+    mode: "0644"
+
+- name: Enable default pages
+  ansible.builtin.file:
+    src: "{{ nginx.conf.site_avail }}/{{ nginx.conf.page_name_def }}"
+    dest: "{{ nginx.conf.site_anable }}/{{ nginx.conf.page_name_def }}"
+    owner: root
+    group: root
+    state: link
+  notify:
+    - Reload nginx
+
+- name: Check tasks base
+  include_tasks: short_tasks/a-n_check_base.yml
+  vars:
+    web_server: "nginx"
+
+- name: Check tasks additional
+  include_tasks: short_tasks/a-n_check_add.yml
+  vars:
+    web_server: "nginx"

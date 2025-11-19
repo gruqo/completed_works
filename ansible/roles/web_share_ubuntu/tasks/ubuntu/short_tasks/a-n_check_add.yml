@@ -1,0 +1,43 @@
+- name: Set temporary web server config
+  set_fact:
+    ws: "{{ lookup('vars', web_server | default('nginx')) }}"
+
+- name: Debug web server configuration
+  debug:
+    msg: |
+      Web Server Type: {{ web_server }}
+      Header Key: {{ ws.websites.default.header.key }}
+      Header Value: {{ ws.websites.default.header.value }}
+      Status Expected: {{ ws.websites.default.header.status_expected }}
+      Full FQDN: {{ common.net.full_fqdn }}
+      Protocol: {{ common.net.protocol }}
+
+- name: Send GET request with custom header
+  uri:
+    url: "{{ common.net.protocol }}://{{ common.net.full_fqdn }}"
+    method: GET
+    headers:
+      X-Test-Request: "{{ ws.websites.default.header.value }}"
+      Host: "{{ common.net.full_fqdn }}"
+    status_code: "{{ ws.websites.default.header.status_expected }}"
+  register: http_test
+
+- name: Debug response
+  debug:
+    msg: |
+      URL: {{ http_test.url }}
+      Status: {{ http_test.status }}
+      Success: {{ http_test.status == ws.websites.default.header.status_def }}
+  #when: http_test.status != ws.websites.default.header.status_expected
+
+- name: Test with curl on localhost
+  shell: |
+    curl -v \
+      -H "{{ ws.websites.default.header.key }}: {{ ws.websites.default.header.value }}" \
+      -H "Host: {{ common.net.full_fqdn }}" \
+      http://127.0.0.1 2>&1 | grep -E "(> Host:|> {{ ws.websites.default.header.key }}:|< HTTP)"
+  register: curl_debug
+
+- name: Show what curl actually sends
+  debug:
+    var: curl_debug.stdout_lines

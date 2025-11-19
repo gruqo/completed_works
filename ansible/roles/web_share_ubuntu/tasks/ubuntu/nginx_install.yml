@@ -1,0 +1,113 @@
+---
+# Nginx: install
+
+- name: Update and upgrade apt packages
+  ansible.builtin.apt:
+    upgrade: true
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install prerequisites
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    state: present
+  loop: "{{ nginx.list_presoft }}"
+
+- name: Add Nginx signing key
+  ansible.builtin.apt_key:
+    url: "{{ nginx.repo.key }}"
+    keyring: "{{ nginx.repo.key_file }}"
+    state: present
+
+- name: Add Nginx repository with allow-insecure
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by={{ nginx.repo.key_file }}] http://nginx.org/packages/ubuntu/ {{ ansible_facts['distribution_release'] }} nginx"
+    state: present
+    filename: nginx
+    update_cache: yes
+
+- name: Update and upgrade apt packages
+  ansible.builtin.apt:
+    upgrade: true
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install nginx
+  ansible.builtin.apt:
+    name: '{{ item }}'
+    state: present
+  loop: "{{ nginx.list_soft }}"
+
+- name: Block for sites config
+  block:
+    - name: Disable default site config
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: 
+        - "{{ nginx.conf.site_anable }}"
+
+    - name: Create directory for sites config
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ common.root_sys }}"
+        group: "{{ common.root_sys }}"
+        mode: "0751"
+      loop:
+        - "{{ nginx.conf.site_anable }}"
+        - "{{ nginx.conf.site_avail }}"
+
+    - name: Check if dafault.origin exists
+      stat:
+        path: "{{ nginx.conf.page | splitext | first }}.origin"
+      register: conf_page
+
+    - name: Rename dafault site config
+      ansible.builtin.copy:
+        src: "{{ nginx.conf.page }}"
+        dest: "{{ nginx.conf.page | splitext | first }}.origin"
+        remote_src: yes
+      when: not conf_page.stat.exists
+
+    - name: Remove dafault.conf
+      ansible.builtin.file:
+        path: "{{ nginx.conf.page }}"
+        state: absent
+      when: not conf_page.stat.exists
+
+- name: Block for Nginx config
+  block:
+    - name: Check if nginx.origin exists
+      stat:
+        path: "{{ nginx.conf.srv | splitext | first }}.origin"
+      register: conf_srv
+
+    - name: Rename default config 
+      ansible.builtin.copy:
+        src: "{{ nginx.conf.srv }}"
+        dest: "{{ nginx.conf.srv | splitext | first }}.origin"
+        remote_src: yes
+      when: not conf_srv.stat.exists
+
+    - name: Create my nginx-config from template
+      ansible.builtin.template:
+        src: "{{ nginx.conf.srv_templ }}"
+        dest: "{{ nginx.conf.srv }}"
+        owner: "{{ common.root_sys }}"
+        group: "{{ common.root_sys }}"
+        mode: "0644"
+
+- name: Change owners of nginx log-file
+  ansible.builtin.file:
+    path: "{{ nginx.log.dirs }}"
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0644"
+  notify:
+    - Start nginx
+
+- name: Check tasks
+  include_tasks: short_tasks/a-n_check_base.yml
+  vars:
+    web_server: "nginx"

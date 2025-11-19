@@ -1,0 +1,9 @@
+- name: Create directory for sites files {{ common.dir_website }}
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0751"
+  loop:
+    - "{{ common.dir_website }}"

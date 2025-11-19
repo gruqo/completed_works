@@ -1,0 +1,53 @@
+---
+# Open port in ufw
+
+- name: Check if UFW is installed
+  ansible.builtin.command: which ufw
+  register: ufw_check
+  ignore_errors: true
+
+- name: Debug check if UFW is installed
+  debug:
+    msg: >
+      UFW {{ 'installed' if ufw_check.rc == 0 else 'not installed' }}.
+
+- name: Run step if UFW is installed
+  block:
+    - name: Get UFW status
+      ansible.builtin.command: ufw status
+      register: ufw_status
+
+    - name: Debug UFW status
+      debug:
+        msg: "{{ ufw_status.stdout }}"
+  when:
+    - ufw_check.rc == 0
+
+- name: Run step if UFW is enabled
+  block:
+    - name: Get UFW app list
+      ansible.builtin.command: ufw app list
+      register: ufw_app_list
+
+    - name: Debug UFW local service list
+      debug:
+        msg: "{{ ufw.list_services }}"
+
+    - name: Debug UFW service list from host
+      debug:
+        msg: "{{ ufw_app_list.stdout | trim }}"
+
+    - name: Compare UFW service lists
+      debug:
+        msg: '{{ ufw_app_list.stdout.splitlines()[1:] | map("trim") | intersect(ufw.list_services) }}'
+
+    - name: Open ports
+      community.general.ufw:
+        rule: allow
+        name: "{{ item }}"
+        state: reloaded
+      with_items:
+        - '{{ ufw_app_list.stdout.splitlines()[1:] | map("trim") | intersect(ufw.list_services) }}'
+
+  when:
+    - "'Status: active' in ufw_status.stdout"

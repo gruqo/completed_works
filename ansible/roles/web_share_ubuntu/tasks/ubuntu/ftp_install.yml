@@ -1,0 +1,101 @@
+---
+ # Tasks for install vsftpd and configure Nginx
+
+- name: Set var home dir for {{ ftp.user.login }}
+  set_fact:
+    ftp_user_dir_home: "{{ common.dir_website }}/ftp-{{ ftp.user.login }}"
+
+- name: Install prerequisites
+  block:
+    - name: Install with apt
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      loop: "{{ ftp.list_presoft }}"
+
+- name: Install vsftpd
+  block:
+    - name: Generate password hash
+      ansible.builtin.shell:
+        cmd: "mkpasswd -m sha-512 '{{ ftp.user.pass }}'"
+      register: password_hash
+
+    - name: Create user with hashed password
+      ansible.builtin.user:
+        name: "{{ ftp.user.login }}"
+        password: "{{ password_hash.stdout }}"
+        uid: "{{ ftp.user.id }}"
+        group: "{{ ftp.user.login }}"
+        shell: /bin/bash
+        create_home: true
+        home: "{{ ftp_user_dir_home }}"
+        state: present
+
+    - name: Install vsftpd
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      loop:
+        - "{{ ftp.list_soft }}"
+
+    - name: Copy vsftpd.conf
+      ansible.builtin.template:
+        src: "{{ ftp.conf.srv_templ }}"
+        dest: "{{ ftp.conf.srv }}"
+        owner: root
+        group: root
+        mode: "0644"
+        backup: true
+  notify:
+    - Restart vsftpd
+
+- name: Check nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+  ignore_errors: true
+  register: nginx_service
+
+- name: Change default configs
+  block:
+     - name: Add a user to a password file
+       community.general.htpasswd:
+         path: "{{ ftp.websites.ftp.auth_basic_user_file }}"
+         name: "{{ ftp.user.login }}"
+         password: "{{ ftp.user.pass }}"
+         owner: root
+         group: "{{ ftp.user.login }}"
+         mode: "0640"
+
+     - name: The web-user appending the group "{{ ftp.user.login }}"
+       ansible.builtin.user:
+         name: "{{ common.root_web }}"
+         groups: "{{ ftp.user.login }}"
+         append: true
+
+     - name: Insert special part into "{{ nginx.conf.site_anable }}/{{ nginx.conf.page_name_def }}"
+       blockinfile:
+         path: "{{ nginx.conf.site_anable }}/{{ nginx.conf.page_name_def }}"
+         block: |
+           location {{ ftp.websites.ftp.external_dir }} {
+               alias "{{ ftp_user_dir_home }}";
+               charset utf-8;
+
+               autoindex on;
+               autoindex_exact_size off;
+               autoindex_localtime on;
+               auth_basic "Restricted";
+               auth_basic_user_file {{ ftp.websites.ftp.auth_basic_user_file }};
+
+               access_log   /var/log/nginx/{{ ftp.websites.ftp.name }}_access.log;
+               error_log    /var/log/nginx/{{ ftp.websites.ftp.name }}_error.log;
+            }
+         insertafter: '# for block "{{ ftp.websites.ftp.name }}"'
+         marker: "# {mark} ANSIBLE MANAGED BLOCK for {{ ftp.websites.ftp.name }}"
+  notify:
+    - Restart nginx
+  when: nginx_service.state == "started"

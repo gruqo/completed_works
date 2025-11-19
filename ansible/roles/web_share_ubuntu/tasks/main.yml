@@ -1,0 +1,86 @@
+---
+# tasks for web_ubuntu
+
+- name: Include tasks for install Angie
+  ansible.builtin.import_tasks:
+    file: ubuntu/angie_install.yml
+  tags:
+    - angie_install
+
+- name: Block check Angie installed
+  block:
+    - name: Check Angie service
+      ansible.builtin.stat:
+        path: /usr/sbin/angie
+      register: angie_check
+
+    - name: Include tasks for install Angie
+      ansible.builtin.import_tasks:
+        file: ubuntu/angie_install.yml
+      when: not angie_check.stat.exists
+  tags:
+    - angie_page
+    - angie_mod
+
+- name: Include tasks for change a default page
+  ansible.builtin.import_tasks:
+    file: ubuntu/angie_default_page.yml
+  when: angie_check.stat.exists
+  tags:
+    - angie_page
+
+- name: Include tasks for install Angie modules
+  ansible.builtin.import_tasks:
+    file: ubuntu/angie_mod_install.yml
+  when: angie_check.stat.exists
+  tags:
+    - angie_mod
+
+- name: Include tasks for install Nginx
+  ansible.builtin.import_tasks:
+    file: ubuntu/nginx_install.yml
+  tags:
+    - nginx_install
+
+- name: Block for check Nginx installed
+  block:
+    - name: Check Nginx service
+      ansible.builtin.stat:
+        path: /usr/sbin/nginx
+      register: nginx_check
+
+    - name: Include tasks for install Nginx
+      ansible.builtin.import_tasks:
+        file: ubuntu/nginx_install.yml
+      when: not nginx_check.stat.exists
+  tags:
+    - nginx_page
+    - php_fpm
+    - ftp
+
+- name: Include tasks for change a default page
+  ansible.builtin.import_tasks:
+    file: ubuntu/nginx_default_page.yml
+  when: nginx_check.stat.exists
+  tags:
+    - nginx_page
+
+- name: Include installation php-fpm
+  ansible.builtin.import_tasks:
+    file: ubuntu/php-fpm_install.yml
+  when: nginx_check.stat.exists
+  tags:
+    - php_fpm
+
+- name: Include add site for vsftpd
+  ansible.builtin.import_tasks:
+    file: ubuntu/ftp_install.yml
+  when: nginx_check.stat.exists
+  tags:
+    - ftp
+
+- name: Open port for services in ufw
+  ansible.builtin.import_tasks:
+    file: ubuntu/ufw_configuration.yml
+  tags:
+    - ufw

@@ -1,0 +1,56 @@
+---
+# Angie: add default page
+
+- name: Create dir for files of websites
+  include_tasks: short_tasks/dirs_common.yml
+
+- name: Create directory for websites files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0751"
+  loop:
+    - "{{ angie.websites.shared_dirs }}"
+    - "{{ angie.websites.shared_dirs }}/{{ angie.websites.default.name }}"
+
+- name: Copy files for default pages
+  ansible.builtin.copy:
+    src: "{{ angie.websites.default.dir_templ }}/{{ angie.websites.default.page_name }}"
+    dest: "{{ angie.websites.shared_dirs }}/{{ angie.websites.default.name }}/{{ angie.websites.default.page_name }}"
+    owner: "{{ common.root_web }}"
+    group: "{{ common.root_web }}"
+    mode: "0644"
+
+- name: Check if config for default pages exists
+  stat:
+    path: "{{ angie.conf.page | splitext | first }}.origin"
+  register: conf_page
+
+- name: Rename config for default pages
+  ansible.builtin.copy:
+    src: "{{ angie.conf.page }}"
+    dest: "{{ angie.conf.page | splitext | first }}.origin"
+    remote_src: yes
+  when: not conf_page.stat.exists
+
+- name: Create config for default pages from template
+  ansible.builtin.template:
+    src: "{{ angie.conf.page_templ }}"
+    dest: "{{ angie.conf.page }}"
+    owner: "{{ common.root_sys }}"
+    group: "{{ common.root_sys }}"
+    mode: "0644"
+  notify:
+    - Reload angie
+
+- name: Check tasks base
+  include_tasks: short_tasks/a-n_check_base.yml
+  vars:
+    web_server: "angie"
+
+- name: Check tasks additional
+  include_tasks: short_tasks/a-n_check_add.yml
+  vars:
+    web_server: "angie"
