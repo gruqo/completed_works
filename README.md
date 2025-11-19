@@ -18,5 +18,5 @@
 |Имя|Описание|
 |:-|:-|
 | [ubu_sys_config](ansible/roles/ubu_sys_config/README.md) | - роль для конфигруции ВМ после создания. <br>ОС: Ubuntu |
-| [ubuntu_web_nginx_php74fpm](ansible/roles/ubuntu_web_nginx_php74fpm/README.md) | - роль для установки и настройки: nginx, php7.4-fpm, vsftpd. <br>ОС: Ubuntu |
+| [web_share_ubuntu](ansible/roles/web_share_ubuntu/README.md) | - роль для установки и настройки: angie, nginx, php7.4-fpm, vsftpd. <br>ОС: Ubuntu |
 | [docker_nginx_php_mysql](/ansible/roles/docker_nginx_php_mysql/README.md) | - роль для разворачивания приложения "Nginx+PHP+Mysql" в docker-контейнерах с использованием docker-compose.yml |
